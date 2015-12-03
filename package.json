@@ -1,7 +1,7 @@
 {
   "name": "mosaic-dataset-facets",
   "version":"0.0.0",
-  "description": "Application datamodel",
+  "description": "Faceted search implementation for datamodels",
   "main": "index.js",
   "scripts": {
     "test": "mocha -R spec ./test/index.js",
