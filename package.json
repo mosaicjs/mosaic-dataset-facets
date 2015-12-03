@@ -1,0 +1,39 @@
+{
+  "name": "mosaic-dataset-facets",
+  "version":"0.0.0",
+  "description": "Application datamodel",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha -R spec ./test/index.js",
+    "bump": "npm test && webpack && npm version patch && git push && git push --tags && npm publish",
+    "bump-minor": "npm run bump && npm version minor && git push && git push --tags && npm publish",
+    "commit": "npm test && webpack && git commit -a"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mosaicjs/mosaic-dataset-facets"
+  },
+  "keywords": [
+    "application"
+  ],
+  "author": "Mikhail Kotelnikov <mikhail.kotelnikov@ubimix.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mosaicjs/mosaic-dataset-facets/issues"
+  },
+  "devDependencies": {
+    "babel-core": "^5.8.22",
+    "babel-loader": "^5.3.2",
+    "expect.js": "^0.3.1",
+    "mocha": "^2.2.5",
+    "node-libs-browser": "^0.5.2",
+    "webpack": "^1.11.0"
+  },
+  "dependencies": {
+    "mosaic-adapters": "^0.2.5",
+    "mosaic-dataset": "^0.1.13",
+    "mosaic-dataset-index": "^0.2.5",
+    "mosaic-intents": "^0.2.7",
+    "promise": "^7.0.4"
+  }
+}
