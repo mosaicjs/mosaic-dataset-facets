@@ -158,62 +158,57 @@ return /******/ (function(modules) { // webpackBootstrap
 	        _classCallCheck(this, AppModel);
 
 	        options = options || {};
-	        this.options = options;
-	        if (!this.options.DataType) {
-	            this.options.DataType = _Resource2['default'];
+	        var that = this;
+	        that.options = options;
+	        if (!that.options.DataType) {
+	            that.options.DataType = _Resource2['default'];
 	        }
 
 	        for (var _len = arguments.length, params = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
 	            params[_key - 1] = arguments[_key];
 	        }
 
-	        this.dataSet = this._newDataSet.apply(this, [options].concat(params));
-	        this.adapters = this.dataSet.adapters;
+	        that.dataSet = that._newDataSet.apply(that, [options].concat(params));
+	        that.adapters = that.dataSet.adapters;
 
 	        // Search criteria
-	        this.searchCriteria = this._newSearchCriteria();
+	        that.searchCriteria = that._newSearchCriteria();
 
 	        // Search index and suggestion indexes
 	        var indexFields = {};
-	        this.suggestionIndexes = {};
-	        this.searchCriteriaTypes.forEach((function (DataType) {
+	        that.suggestionIndexes = {};
+	        that.searchCriteriaTypes.forEach(function (DataType) {
 	            var indexKey = DataType.indexKey;
 	            indexFields[indexKey] = DataType.indexFields;
-	            this.suggestionIndexes[indexKey] = this._newSuggestionIndex({
+	            that.suggestionIndexes[indexKey] = that._newSuggestionIndex({
 	                DataType: DataType,
 	                indexFields: DataType.suggestionFields
 	            });
-	        }).bind(this));
-	        this.searchIndex = this.dataSet.newAdapter(_mosaicDatasetIndex.SearchableDataSet, {
+	        });
+	        that.searchIndex = that.dataSet.newAdapter(_mosaicDatasetIndex.SearchableDataSet, {
 	            indexFields: indexFields
 	        });
-	        this.searchIndex.options.cluster = true;
-
-	        var searchIndex = this.searchIndex;
+	        that.searchIndex.options.cluster = true;
 
 	        // Paginated data set for search results
-	        var paginatedDataSet = this.paginatedDataSet = new _mosaicDataset.DataSetPaginated({
-	            dataSet: searchIndex
-	        });
-	        paginatedDataSet.pageSize = 20;
+	        that.paginatedDataSet = that.searchIndex.getAdapter(_mosaicDataset.DataSetPaginated);
+	        that.paginatedDataSet.pageSize = 20;
 
 	        // Open items
-	        var openItems = this.openItems = new _mosaicDataset.DataSetSelection({
-	            dataSet: this.dataSet
-	        });
-	        openItems.addListener('update', function (intent) {
+	        that.openItems = that.dataSet.getAdapter(_mosaicDataset.DataSetSelection);
+	        that.openItems.addListener('update', function (intent) {
 	            intent.then(function () {
-	                var item = openItems.get(0);
+	                var item = that.openItems.get(0);
 	                if (item) {
-	                    var pos = searchIndex.pos(item) || 0;
-	                    paginatedDataSet.focusPos(pos);
+	                    var pos = that.searchIndex.pos(item) || 0;
+	                    that.paginatedDataSet.focusPos(pos);
 	                }
 	            });
 	        });
 
 	        // Bind event listeners to this object
-	        this._onDataSetUpdate = this._onDataSetUpdate.bind(this);
-	        this._runSearch = this._runSearch.bind(this);
+	        that._onDataSetUpdate = that._onDataSetUpdate.bind(that);
+	        that._runSearch = that._runSearch.bind(that);
 	    }
 
 	    // ------------------------------------------------------------------------
@@ -338,10 +333,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    }, {
 	        key: 'serializeSearchCriteria',
-	        value: function serializeSearchCriteria(searchCriteria) {
+	        value: function serializeSearchCriteria() {
 	            var that = this;
 	            var result = {};
-	            searchCriteria = searchCriteria || this.searchCriteria;
+	            var searchCriteria = this.searchCriteria;
 	            searchCriteria.visit({
 	                before: function before(criterion) {
 	                    var indexKey = criterion.indexKey;
@@ -360,7 +355,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    }, {
 	        key: 'deserializeSearchCriteria',
-	        value: function deserializeSearchCriteria(params, searchCriteria) {
+	        value: function deserializeSearchCriteria(params) {
 	            params = params || {};
 	            var adapters = this.adapters;
 	            var items = [];
@@ -378,9 +373,33 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    }
 	                });
 	            });
-	            searchCriteria = searchCriteria || this._newSearchCriteria();
-	            searchCriteria.items = items;
-	            return searchCriteria;
+	            return this.searchCriteria.setItems(items);
+	        }
+
+	        // ------------------------------------------------------------------------
+
+	    }, {
+	        key: 'serializeOpenItems',
+	        value: function serializeOpenItems() {
+	            return this.openItems.items.map(function (item) {
+	                return item.id;
+	            });
+	        }
+	    }, {
+	        key: 'deserializeOpenItems',
+	        value: function deserializeOpenItems(ids) {
+	            if (!Array.isArray(ids)) {
+	                ids = !!ids ? [ids] : [];
+	            }
+	            var that = this;
+	            var items = [];
+	            ids.forEach(function (id) {
+	                var item = that.dataSet.byId(id);
+	                if (item) {
+	                    items.push(item);
+	                }
+	            });
+	            return this.openItems.setItems(items);
 	        }
 
 	        // ------------------------------------------------------------------------
@@ -476,7 +495,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        key: '_runSearch',
 	        value: function _runSearch(intent) {
 	            var that = this;
+	            var before = that.serializeSearchCriteria();
 	            return intent.then(function () {
+	                var after = that.serializeSearchCriteria();
+	                if (JSON.stringify(before) == JSON.stringify(after)) return;
 	                return that.search(that.searchCriteria);
 	            });
 	        }
