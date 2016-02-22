@@ -208,6 +208,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        // Bind event listeners to this object
 	        that._onDataSetUpdate = that._onDataSetUpdate.bind(that);
+	        that._onSearchResultsUpdate = that._onSearchResultsUpdate.bind(that);
 	        that._runSearch = that._runSearch.bind(that);
 	    }
 
@@ -220,6 +221,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var that = this;
 	            return Promise.resolve().then(function () {
 	                that.dataSet.addListener('update', that._onDataSetUpdate);
+	                that.searchIndex.addListener('update', that._onSearchResultsUpdate);
 	                that.searchCriteria.addListener('update', that._runSearch);
 	            }).then(function () {
 	                // Set configuration parameters;
@@ -242,6 +244,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return Promise.resolve().then(function () {
 	                that.searchCriteria.removeListener('update', that._runSearch);
 	                that.dataSet.removeListener('update', that._onDataSetUpdate);
+	                that.searchIndex.removeListener('update', that._onSearchResultsUpdate);
 	                return result;
 	            });
 	        }
@@ -388,6 +391,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }, {
 	        key: 'deserializeOpenItems',
 	        value: function deserializeOpenItems(ids) {
+	            console.log('TODO: deserialize ids from a string', ids);
 	            if (!Array.isArray(ids)) {
 	                ids = !!ids ? [ids] : [];
 	            }
@@ -446,6 +450,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	        value: function _onDataSetUpdate(intent) {
 	            var that = this;
 	            intent.then(function () {
+	                return that.search(that.searchCriteria);
+	            });
+	        }
+	    }, {
+	        key: '_onSearchResultsUpdate',
+	        value: function _onSearchResultsUpdate(intent) {
+	            var that = this;
+	            intent.then(function () {
 	                return Promise.resolve().then(function () {
 	                    var promises = [];
 	                    // Automatically extracts all fields marked with the "suggest"
@@ -460,7 +472,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                            promises.push(set.setItems(values));
 	                        });
 	                    });
-	                    promises.push(that.search(that.searchCriteria));
 	                    return Promise.all(promises);
 	                });
 	            });
@@ -469,7 +480,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        key: '_extractFieldValues',
 	        value: function _extractFieldValues(path) {
 	            var index = {};
-	            this.dataSet.forEach(function (r) {
+	            this.searchIndex.forEach(function (r) {
 	                var values = r.get(path);
 	                if (!values) return;
 	                if (!Array.isArray(values)) {
