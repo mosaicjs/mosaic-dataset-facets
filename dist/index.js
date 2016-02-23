@@ -487,15 +487,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    values = [values];
 	                }
 	                values.forEach(function (val) {
-	                    var key = val; // val.toLowerCase();
+	                    var key = val.toLowerCase();
 	                    var obj = index[key] = index[key] || {
 	                        key: key,
-	                        values: []
+	                        values: [],
+	                        counter: 0
 	                    };
 	                    if (obj.values.indexOf(val) < 0) {
 	                        obj.values.push(val);
 	                        obj.values.sort();
 	                    }
+	                    obj.counter++;
 	                });
 	            });
 	            return Object.keys(index).sort().map(function (key) {
