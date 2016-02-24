@@ -391,9 +391,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }, {
 	        key: 'deserializeOpenItems',
 	        value: function deserializeOpenItems(ids) {
-	            console.log('TODO: deserialize ids from a string', ids);
 	            if (!Array.isArray(ids)) {
-	                ids = !!ids ? [ids] : [];
+	                if (typeof ids === 'string') {
+	                    ids = ids.split(/[,;]/gim);
+	                } else {
+	                    ids = !!ids ? [ids] : [];
+	                }
 	            }
 	            var that = this;
 	            var items = [];
