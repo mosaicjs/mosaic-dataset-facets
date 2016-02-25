@@ -195,18 +195,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        that.paginatedDataSet.pageSize = 20;
 
 	        // Open items
-	        that.openItems = that.dataSet.getAdapter(_mosaicDataset.DataSetSelection);
-	        that.openItems.addListener('update', function (intent) {
-	            intent.then(function () {
-	                var item = that.openItems.get(0);
-	                if (item) {
-	                    var pos = that.searchIndex.pos(item) || 0;
-	                    that.paginatedDataSet.focusPos(pos);
-	                }
-	            });
-	        });
+	        that.openItems = that.searchIndex.getAdapter(_mosaicDataset.DataSetSelection);
 
 	        // Bind event listeners to this object
+	        that._onUpdateFocus = that._onUpdateFocus.bind(that);
 	        that._onDataSetUpdate = that._onDataSetUpdate.bind(that);
 	        that._onSearchResultsUpdate = that._onSearchResultsUpdate.bind(that);
 	        that._runSearch = that._runSearch.bind(that);
@@ -220,6 +212,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            options = options || {};
 	            var that = this;
 	            return Promise.resolve().then(function () {
+	                that.openItems.addListener('update', that._onUpdateFocus);
 	                that.dataSet.addListener('update', that._onDataSetUpdate);
 	                that.searchIndex.addListener('update', that._onSearchResultsUpdate);
 	                that.searchCriteria.addListener('update', that._runSearch);
@@ -242,6 +235,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var that = this;
 	            var result = _get(Object.getPrototypeOf(AppModel.prototype), 'close', this).call(this);
 	            return Promise.resolve().then(function () {
+	                that.openItems.removeListener('update', that._onUpdateFocus);
 	                that.searchCriteria.removeListener('update', that._runSearch);
 	                that.dataSet.removeListener('update', that._onDataSetUpdate);
 	                that.searchIndex.removeListener('update', that._onSearchResultsUpdate);
@@ -457,6 +451,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	            });
 	        }
 	    }, {
+	        key: '_onUpdateFocus',
+	        value: function _onUpdateFocus(intent) {
+	            var that = this;
+	            intent.then(function () {
+	                that._updateFocus();
+	            });
+	        }
+	    }, {
 	        key: '_onSearchResultsUpdate',
 	        value: function _onSearchResultsUpdate(intent) {
 	            var that = this;
@@ -475,9 +477,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	                            promises.push(set.setItems(values));
 	                        });
 	                    });
-	                    return Promise.all(promises);
+	                    return Promise.all(promises).then(function () {
+	                        that._updateFocus();
+	                    });
 	                });
 	            });
+	        }
+	    }, {
+	        key: '_updateFocus',
+	        value: function _updateFocus() {
+	            var item = this.openItems.get(0);
+	            var pos = Math.max(this.searchIndex.pos(item), 0);
+	            this.paginatedDataSet.focusPos(pos);
 	        }
 	    }, {
 	        key: '_extractFieldValues',
