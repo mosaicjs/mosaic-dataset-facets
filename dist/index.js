@@ -140,9 +140,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * the "searchIndex" set. </li>
 	 * <li>A "paginatedDataSet" gives access to a limited sub-set of found
 	 * elements. It implements pagination of search results</li>
-	 * <li>"openItems" data set giving access to open/activated items. It
+	 * <li>"focusedItems" data set giving access to focused items. It
 	 * automatically updates position in the "paginatedDataSet" - it focus the page
 	 * with the first open item.</li>
+	 * <li>"selectedItems" data set giving access to selected items. </li>
 	 * </ul>
 	 * Important methods of this class:
 	 * <ul>
@@ -195,7 +196,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        that.paginatedDataSet.pageSize = 20;
 
 	        // Open items
-	        that.openItems = that.searchIndex.getAdapter(_mosaicDataset.DataSetSelection);
+	        that.focusedItems = that.searchIndex.newAdapter(_mosaicDataset.DataSetSelection);
+	        // @deprecated use the "focusedItems" field instead
+	        that.openItems = that.focusedItems;
+
+	        // Selected items
+	        that.selectedItems = that.searchIndex.newAdapter(_mosaicDataset.DataSetSelection);
 
 	        // Bind event listeners to this object
 	        that._onUpdateFocus = that._onUpdateFocus.bind(that);
@@ -212,7 +218,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            options = options || {};
 	            var that = this;
 	            return Promise.resolve().then(function () {
-	                that.openItems.addListener('update', that._onUpdateFocus);
+	                that.focusedItems.addListener('update', that._onUpdateFocus);
 	                that.dataSet.addListener('update', that._onDataSetUpdate);
 	                that.searchIndex.addListener('update', that._onSearchResultsUpdate);
 	                that.searchCriteria.addListener('update', that._runSearch);
@@ -235,7 +241,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var that = this;
 	            var result = _get(Object.getPrototypeOf(AppModel.prototype), 'close', this).call(this);
 	            return Promise.resolve().then(function () {
-	                that.openItems.removeListener('update', that._onUpdateFocus);
+	                that.focusedItems.removeListener('update', that._onUpdateFocus);
 	                that.searchCriteria.removeListener('update', that._runSearch);
 	                that.dataSet.removeListener('update', that._onDataSetUpdate);
 	                that.searchIndex.removeListener('update', that._onSearchResultsUpdate);
@@ -375,16 +381,30 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        // ------------------------------------------------------------------------
 
+	        // @deprecated use the serializeFocusedItems instead
 	    }, {
 	        key: 'serializeOpenItems',
 	        value: function serializeOpenItems() {
-	            return this.openItems.items.map(function (item) {
+	            return this.serializeFocusedItems();
+	        }
+	    }, {
+	        key: 'serializeFocusedItems',
+	        value: function serializeFocusedItems() {
+	            return this.focusedItems.items.map(function (item) {
 	                return item.id;
 	            });
 	        }
+
+	        // @deprecated use the deserializeFocusedItems instead
 	    }, {
 	        key: 'deserializeOpenItems',
 	        value: function deserializeOpenItems(ids) {
+	            return this.deserializeFocusedItems(ids);
+	        }
+	    }, {
+	        key: 'deserializeFocusedItems',
+	        value: function deserializeFocusedItems(ids) {
+
 	            if (!Array.isArray(ids)) {
 	                if (typeof ids === 'string') {
 	                    ids = ids.split(/[,;]/gim);
@@ -400,7 +420,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    items.push(item);
 	                }
 	            });
-	            return this.openItems.setItems(items);
+	            return this.focusedItems.setItems(items);
 	        }
 
 	        // ------------------------------------------------------------------------
@@ -486,7 +506,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }, {
 	        key: '_updateFocus',
 	        value: function _updateFocus() {
-	            var item = this.openItems.get(0);
+	            var item = this.focusedItems.get(0);
 	            var pos = Math.max(this.searchIndex.pos(item), 0);
 	            this.paginatedDataSet.focusPos(pos);
 	        }
