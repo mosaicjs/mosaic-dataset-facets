@@ -180,11 +180,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	        that.suggestionIndexes = {};
 	        that.searchCriteriaTypes.forEach(function (DataType) {
 	            var indexKey = DataType.indexKey;
-	            indexFields[indexKey] = DataType.indexFields;
-	            that.suggestionIndexes[indexKey] = that._newSuggestionIndex({
-	                DataType: DataType,
-	                indexFields: DataType.suggestionFields
-	            });
+	            if (DataType.indexFields) {
+	                indexFields[indexKey] = DataType.indexFields;
+	            }
+	            if (DataType.suggestionFields) {
+	                that.suggestionIndexes[indexKey] = that._newSuggestionIndex({
+	                    DataType: DataType,
+	                    indexFields: DataType.suggestionFields
+	                });
+	            }
 	        });
 	        that.searchIndex = that.dataSet.newAdapter(_mosaicDatasetIndex.SearchableDataSet, {
 	            indexFields: indexFields
@@ -366,7 +370,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            Object.keys(that.suggestionIndexes).forEach(function (indexKey) {
 	                var values = params[indexKey];
 	                if (!values) return;
-	                values = Array.isArray(values) ? values : [values];
+	                values = Array.isArray(values) ? values : values ? [values] : [];
 	                var set = that.suggestionIndexes[indexKey];
 	                if (!set || typeof set.getSearchCriterion !== 'function') return;
 	                values.forEach(function (value) {
@@ -490,12 +494,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    Object.keys(that.suggestionIndexes).forEach(function (indexKey) {
 	                        var set = that.suggestionIndexes[indexKey];
 	                        var indexFields = set.DataType.indexFields;
-	                        Object.keys(indexFields).forEach(function (fieldName) {
-	                            var field = indexFields[fieldName];
-	                            if (!field.suggest) return;
-	                            var values = that._extractFieldValues(fieldName);
-	                            promises.push(set.setItems(values));
-	                        });
+	                        if (indexFields) {
+	                            Object.keys(indexFields).forEach(function (fieldName) {
+	                                var field = indexFields[fieldName];
+	                                if (!field.suggest) return;
+	                                var values = that._extractFieldValues(fieldName);
+	                                promises.push(set.setItems(values));
+	                            });
+	                        }
 	                    });
 	                    return Promise.all(promises).then(function () {
 	                        that._updateFocus();
@@ -521,7 +527,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    values = [values];
 	                }
 	                values.forEach(function (val) {
-	                    var key = val.toLowerCase();
+	                    var key = val; // val.toLowerCase();
 	                    var obj = index[key] = index[key] || {
 	                        key: key,
 	                        values: [],
@@ -545,7 +551,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var before = that.serializeSearchCriteria();
 	            return intent.then(function () {
 	                var after = that.serializeSearchCriteria();
-	                if (JSON.stringify(before) == JSON.stringify(after)) return;
+	                //            if (JSON.stringify(before) == JSON.stringify(after))
+	                //                return ;
 	                return that.search(that.searchCriteria);
 	            });
 	        }
