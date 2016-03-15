@@ -1,6 +1,6 @@
 {
   "name": "mosaic-dataset-facets",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Faceted search implementation for datamodels",
   "main": "index.js",
   "scripts": {
