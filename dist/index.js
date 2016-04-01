@@ -211,7 +211,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        that._onUpdateFocus = that._onUpdateFocus.bind(that);
 	        that._onDataSetUpdate = that._onDataSetUpdate.bind(that);
 	        that._onSuggestionSetUpdated = that._onSuggestionSetUpdated.bind(that);
-	        that._runSearch = that._runSearch.bind(that);
+	        that._handleSearchIntent = that._handleSearchIntent.bind(that);
 	    }
 
 	    _createClass(AppModel, [{
@@ -226,7 +226,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                that.focusedItems.addListener('update', that._onUpdateFocus);
 	                that.dataSet.addListener('update', that._onDataSetUpdate);
 	                that._suggestionSet.addListener('update', that._onSuggestionSetUpdated);
-	                that.searchCriteria.addListener('update', that._runSearch);
+	                that.searchCriteria.addListener('update', that._handleSearchIntent);
 	            }).then(function () {
 	                // Set configuration parameters;
 	                // Initializes suggestion data sets
@@ -247,7 +247,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var result = _get(Object.getPrototypeOf(AppModel.prototype), 'close', this).call(this);
 	            return Promise.resolve().then(function () {
 	                that.focusedItems.removeListener('update', that._onUpdateFocus);
-	                that.searchCriteria.removeListener('update', that._runSearch);
+	                that.searchCriteria.removeListener('update', that._handleSearchIntent);
 	                that.dataSet.removeListener('update', that._onDataSetUpdate);
 	                that._suggestionSet.removeListener('update', that._onSuggestionSetUpdated);
 	                return result;
@@ -331,14 +331,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    return result;
 	                });
 	            });
-	        }
-
-	        // ------------------------------------------------------------------------
-
-	    }, {
-	        key: 'search',
-	        value: function search(query) {
-	            return this.searchIndex.search(query);
 	        }
 
 	        // ------------------------------------------------------------------------
@@ -472,11 +464,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	            });
 	        }
 	    }, {
+	        key: '_handleSearchIntent',
+	        value: function _handleSearchIntent(intent) {
+	            var that = this;
+	            return intent.then(function () {
+	                return that._runSearch();
+	            });
+	        }
+	    }, {
 	        key: '_onDataSetUpdate',
 	        value: function _onDataSetUpdate(intent) {
 	            var that = this;
 	            intent.then(function () {
-	                return that.search(that.searchCriteria);
+	                return that._runSearch();
 	            });
 	        }
 	    }, {
@@ -557,15 +557,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    }, {
 	        key: '_runSearch',
-	        value: function _runSearch(intent) {
-	            var that = this;
-	            var before = that.serializeSearchCriteria();
-	            return intent.then(function () {
-	                var after = that.serializeSearchCriteria();
-	                //            if (JSON.stringify(before) == JSON.stringify(after))
-	                //                return ;
-	                return that.search(that.searchCriteria);
-	            });
+	        value: function _runSearch() {
+	            return this.searchIndex.search(this.searchCriteria);
 	        }
 	    }, {
 	        key: '_suggestionSet',
@@ -681,13 +674,31 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	            return this._typeKey;
 	        }
+	    }, {
+	        key: 'id',
+	        get: function get() {
+	            var id = this._id;
+	            if (id) {
+	                return id;
+	            }
+	            var data = this.data;
+	            id = data.id;
+	            if (id === undefined) {
+	                id = (data.properties || {}).id;
+	                if (id === undefined) {
+	                    id = Resource.idCounter = (Resource.idCounter || 0) + 1;
+	                }
+	            }
+	            this._id = '' + id;
+	            return id;
+	        }
 	    }], [{
 	        key: 'getTypeKey',
 	        value: function getTypeKey() {
 	            if (!this._typeKey) {
 	                this._typeKey = _mosaicAdapters.TypeKey['for'](this.name);
 	            }
-	            //        console.log('TYPE KEY', this._typeKey);
+	            // console.log('TYPE KEY', this._typeKey);
 	            return this._typeKey;
 	        }
 	    }]);
