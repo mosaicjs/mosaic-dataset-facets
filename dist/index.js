@@ -334,6 +334,50 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 
 	        // ------------------------------------------------------------------------
+	        // Search
+
+	    }, {
+	        key: 'getSuggestionItems',
+	        value: function getSuggestionItems(indexKey, filter) {
+	            var set = this.suggestionIndexes[indexKey];
+	            var items = set ? set.items : [];
+	            return items;
+	        }
+	    }, {
+	        key: 'toggleSearchCriteriaByKey',
+	        value: function toggleSearchCriteriaByKey(indexKey, key) {
+	            var item = this.findCriteria(indexKey, key);
+	            if (!item) return;
+	            return this.toggleSearchCriteria(item);
+	        }
+	    }, {
+	        key: 'toggleSearchCriteria',
+	        value: function toggleSearchCriteria(item) {
+	            var s = this.searchCriteria;
+	            if (s.has(item)) {
+	                s.removeItem(item);
+	            } else {
+	                s.add(item);
+	            }
+	        }
+	    }, {
+	        key: 'findCriteria',
+	        value: function findCriteria(indexKey, key) {
+	            var set = this.suggestionIndexes[indexKey];
+	            if (!set) return;
+	            var item = set.find(function (r) {
+	                return r.data.key === key ? r : null;
+	            });
+	            return item;
+	        }
+	    }, {
+	        key: 'clearSearchCriteria',
+	        value: function clearSearchCriteria() {
+	            var s = this.searchCriteria;
+	            return s.setItems([]);
+	        }
+
+	        // ------------------------------------------------------------------------
 
 	    }, {
 	        key: 'serializeSearchCriteria',
